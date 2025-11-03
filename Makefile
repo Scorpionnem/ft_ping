@@ -7,7 +7,9 @@ INCLUDES =	-I ./includes/\
 			-I ./libftgetopt/includes/
 
 SRCS =	src/main.c\
-		src/ctx.c
+		src/ctx.c\
+		src/checksum.c\
+		src/dns.c
 
 OBJDIR = obj
 OBJS = $(SRCS:%.c=$(OBJDIR)/%.o)
