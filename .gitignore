@@ -2,3 +2,6 @@ ft_ping
 obj/
 *.o
 *.d
+libftgetopt
+.vscode
+
