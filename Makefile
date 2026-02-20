@@ -1,65 +1,56 @@
-NAME = ft_ping
+NAME :=	template
 
-CC = cc
-CFLAGS = -Wall -Wextra -Werror -g
+CC :=	cc
+CFLAGS :=	-g -MP -MMD -Wall -Wextra -Werror # -fsanitize=address -fno-omit-frame-pointer
+LFLAGS :=
 
-INCLUDES =	-I ./includes/\
-			-I ./libftgetopt/includes/
+###
 
-SRCS =	src/main.c\
-		src/ctx.c\
-		src/checksum.c\
-		src/dns.c
+INCLUDE_DIRS :=	inc/\
 
-OBJDIR = obj
-OBJS = $(SRCS:%.c=$(OBJDIR)/%.o)
-DEPS = $(SRCS:%.c=$(OBJDIR)/%.d)
+SRCS :=	main\
+		opt\
 
-LIBFTGETOPTDIR = libftgetopt
-LIBFTGETOPT = ./$(LIBFTGETOPTDIR)/libftgetopt.a
+###
 
-all: libftgetopt $(LIBFTGETOPT) $(NAME)
+INCLUDE_DIRS :=	$(addprefix -I, $(INCLUDE_DIRS))
 
-libftgetopt:
-	@if ls | grep -q "$(LIBFTGETOPTDIR)"; then \
-		echo "\033[32;1;4mlibftgetopt Found\033[0m"; \
-	else \
-		echo "\033[31;1;4mlibftgetopt Not Found\033[0m"; \
-		echo "\033[31;1mCloning libftgetopt from github\033[0m"; \
-		git clone https://github.com/Scorpionnem/libftgetopt $(LIBFTGETOPTDIR); \
-		make -C $(LIBFTGETOPTDIR) ;\
-	fi
+SRCS :=	$(addprefix src/, $(SRCS))
+SRCS :=	$(addsuffix .c, $(SRCS))
 
-re: fclean all
+###
 
-$(LIBFTGETOPT):
-	make -C $(LIBFTGETOPTDIR)
+OBJ_DIR :=	obj
+
+OBJS =	$(SRCS:%.c=$(OBJ_DIR)/%.o)
+DEPS =	$(SRCS:%.c=$(OBJ_DIR)/%.d)
+
+###
+
+compile:
+	@make -j all --no-print-directory
+
+all: $(NAME)
 
 $(NAME): $(OBJS)
 	@echo Compiling $(NAME)
-	@$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBFTGETOPT)
+	@$(CC) $(CFLAGS) $(LFLAGS) $(INCLUDE_DIRS) -o $@ $^
 
-$(OBJDIR)/%.o: %.c
+$(OBJ_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	@echo Compiling $<
-	@$(CC) $(CFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+	@echo Compiling $@
+	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
 
-clean:
-	@make -C $(LIBFTGETOPTDIR) clean
-	@echo Cleaning objects
-	@rm -rf $(OBJDIR)
+re: fclean compile
 
 fclean: clean
-	@make -C $(LIBFTGETOPTDIR) fclean
-	@echo Cleaning $(NAME)
+	@echo Removed $(NAME)
 	@rm -rf $(NAME)
 
-dclean: fclean
-	@rm -rf $(LIBFTGETOPTDIR)
+clean:
+	@echo Removed $(OBJ_DIR)
+	@rm -rf $(OBJ_DIR)
 
-run: $(NAME)
-	./$(NAME)
-
-.PHONY: all clean fclean re run libftgetopt
+.PHONY: all clean fclean re compile
 
 -include $(DEPS)
