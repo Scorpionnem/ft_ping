@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:47:26 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/20 13:17:20 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/20 13:57:14 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,4 +54,4 @@ int	opt_ctx_init(t_opt_ctx *ctx);
 
 int	opt_ctx_delete(t_opt_ctx *ctx);
 
-int	opt_ctx_parse(t_opt_ctx *ctx, char **av);
+int	opt_ctx_parse(t_opt_ctx *ctx, char ***av);

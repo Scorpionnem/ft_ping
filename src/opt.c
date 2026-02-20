@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:47:54 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/20 13:24:55 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/20 13:58:31 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,22 +60,27 @@ static int	has_opt(t_opt_ctx *ctx, char *id)
 
 #include <stdio.h>
 
-int	opt_ctx_parse(t_opt_ctx *ctx, char **av)
+int	opt_ctx_parse(t_opt_ctx *ctx, char ***av)
 {
 	(void)ctx;
-	av++;
+	(*av)++;
 	int	i = -1;
-	while (av[++i])
+	int	dump = 0;
+	while ((*av)[++i])
 	{
-		char	*arg = av[i];
+		char	*arg = (*av)[i];
 		int		find = has_opt(ctx, arg);
 		if (find != -1)
 		{
-			printf("%s\n", ctx->options[find].id);
+			if (!(*av)[i + 1])
+				return (printf("ERROR NO ARG\n"), -1);
+			printf("%s ", ctx->options[find].id);
+			printf("%s\n", (*av)[i + 1]);
 			i++;
 		}
 		else
-			return (printf("ERROR\n"), -1);
+			(*av)[dump++] = (*av)[i];
 	}
+	(*av)[dump] = NULL;
 	return (1);
 }
