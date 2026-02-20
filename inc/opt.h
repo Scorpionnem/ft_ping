@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:47:26 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/20 13:57:14 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/20 15:09:01 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,10 +48,14 @@ typedef struct	s_opt_ctx
 	int			options_count;
 }	t_opt_ctx;
 
+/* Add option to be parsed in the opt_ctx */
 int	opt_ctx_add_opt(t_opt_ctx *ctx, char *id, t_opt *opt);
 
+/* Init all values inside ctx */
 int	opt_ctx_init(t_opt_ctx *ctx);
 
+/* Free memory used by ctx */
 int	opt_ctx_delete(t_opt_ctx *ctx);
 
+/* parse av using options set by opt_ctx_add_opt, sets all unused values in order in av */
 int	opt_ctx_parse(t_opt_ctx *ctx, char ***av);

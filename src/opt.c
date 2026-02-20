@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:47:54 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/20 13:58:31 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/20 15:09:34 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,21 +62,49 @@ static int	has_opt(t_opt_ctx *ctx, char *id)
 
 int	opt_ctx_parse(t_opt_ctx *ctx, char ***av)
 {
-	(void)ctx;
-	(*av)++;
 	int	i = -1;
 	int	dump = 0;
+
+	(*av)++;
 	while ((*av)[++i])
 	{
 		char	*arg = (*av)[i];
 		int		find = has_opt(ctx, arg);
 		if (find != -1)
 		{
-			if (!(*av)[i + 1])
-				return (printf("ERROR NO ARG\n"), -1);
-			printf("%s ", ctx->options[find].id);
-			printf("%s\n", (*av)[i + 1]);
-			i++;
+			t_opt	*op = ctx->options[find].opt;
+
+			switch (op->type)
+			{
+				case OPT_BOOL:
+				{
+					op->_bool = true;
+					break ;
+				}
+				case OPT_STR:
+				{
+					if (!(*av)[i + 1])
+						return (printf("ERROR NO ARG\n"), -1);
+					op->_str = (*av)[++i];
+					break ;
+				}
+				case OPT_INT:
+				{
+					if (!(*av)[i + 1])
+						return (printf("ERROR NO ARG\n"), -1);
+					op->_int = atoi((*av)[++i]);
+					break ;
+				}
+				case OPT_FLOAT:
+				{
+					if (!(*av)[i + 1])
+						return (printf("ERROR NO ARG\n"), -1);
+					op->_float = atof((*av)[++i]);
+					break ;
+				}
+				default:
+					return (dprintf(2, "INVALID OPT TYPE\n"), -1);
+			}
 		}
 		else
 			(*av)[dump++] = (*av)[i];
