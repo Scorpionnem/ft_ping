@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:34:33 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/21 10:50:47 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/21 11:10:18 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ typedef struct	s_ctx
 {
 	t_opt	help;
 	t_opt	verbose;
+	t_opt	test;
 }	t_ctx;
 
 void	print_help()
@@ -34,6 +35,7 @@ int	main(int ac, char **av)
 	t_opt_ctx	opt_ctx;
 	ctx.help = opt_new(OPT_BOOL);
 	ctx.verbose = opt_new(OPT_BOOL);
+	ctx.test = opt_new(OPT_STR);
 
 	opt_ctx_init(&opt_ctx);
 
@@ -44,7 +46,13 @@ int	main(int ac, char **av)
 	opt_ctx_add_opt(&opt_ctx, "-v", &ctx.verbose);
 	opt_ctx_add_opt(&opt_ctx, "--verbose", &ctx.verbose);
 
-	opt_ctx_parse(&opt_ctx, &av);
+	opt_ctx_add_opt(&opt_ctx, "--test", &ctx.test);
+
+	if (opt_ctx_parse(&opt_ctx, &av) == -1)
+	{
+		opt_ctx_delete(&opt_ctx);
+		return (1);
+	}
 
 	if (ctx.help._bool)
 	{
