@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:34:33 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/20 15:07:30 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/21 10:50:47 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,13 @@ typedef struct	s_ctx
 	t_opt	help;
 	t_opt	verbose;
 }	t_ctx;
+
+void	print_help()
+{
+	printf("usage: ./ft_ping [-h, -?]\n\n");
+	printf("options:\n");
+	printf("-? -h --help\tshow help message and exit\n");
+}
 
 int	main(int ac, char **av)
 {	(void)ac;
@@ -39,6 +46,13 @@ int	main(int ac, char **av)
 
 	opt_ctx_parse(&opt_ctx, &av);
 
+	if (ctx.help._bool)
+	{
+		print_help();
+		opt_ctx_delete(&opt_ctx);
+		return (0);
+	}
+
 	while (*av)
 	{
 		printf("REMAINING %s\n", *av);
@@ -46,4 +60,5 @@ int	main(int ac, char **av)
 	}
 
 	opt_ctx_delete(&opt_ctx);
+	return (0);
 }
