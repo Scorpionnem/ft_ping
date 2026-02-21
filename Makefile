@@ -1,4 +1,4 @@
-NAME :=	template
+NAME :=	ft_ping
 
 CC :=	cc
 CFLAGS :=	-g -MP -MMD -Wall -Wextra -Werror # -fsanitize=address -fno-omit-frame-pointer
@@ -10,6 +10,8 @@ INCLUDE_DIRS :=	inc/\
 
 SRCS :=	main\
 		opt\
+		dns\
+		ctx\
 
 ###
 

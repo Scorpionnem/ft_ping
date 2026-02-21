@@ -6,20 +6,16 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:34:33 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/21 11:10:18 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/21 18:15:04 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ctx.h"
+#include "dns.h"
 
 #include <stdio.h>
-
-typedef struct	s_ctx
-{
-	t_opt	help;
-	t_opt	verbose;
-	t_opt	test;
-}	t_ctx;
+#include <stdlib.h>
+#include <string.h>
 
 void	print_help()
 {
@@ -28,45 +24,20 @@ void	print_help()
 	printf("-? -h --help\tshow help message and exit\n");
 }
 
-int	main(int ac, char **av)
-{	(void)ac;
+#define UNUSED(x)	_unused_##x __attribute__((unused))
+
+int	main(int UNUSED(ac), char **av)
+{
 	t_ctx	ctx;
 
-	t_opt_ctx	opt_ctx;
-	ctx.help = opt_new(OPT_BOOL);
-	ctx.verbose = opt_new(OPT_BOOL);
-	ctx.test = opt_new(OPT_STR);
-
-	opt_ctx_init(&opt_ctx);
-
-	opt_ctx_add_opt(&opt_ctx, "-h", &ctx.help);
-	opt_ctx_add_opt(&opt_ctx, "-?", &ctx.help);
-	opt_ctx_add_opt(&opt_ctx, "--help", &ctx.help);
-
-	opt_ctx_add_opt(&opt_ctx, "-v", &ctx.verbose);
-	opt_ctx_add_opt(&opt_ctx, "--verbose", &ctx.verbose);
-
-	opt_ctx_add_opt(&opt_ctx, "--test", &ctx.test);
-
-	if (opt_ctx_parse(&opt_ctx, &av) == -1)
-	{
-		opt_ctx_delete(&opt_ctx);
+	if (ctx_init(&ctx, &av) == -1)
 		return (1);
-	}
 
-	if (ctx.help._bool)
-	{
-		print_help();
-		opt_ctx_delete(&opt_ctx);
-		return (0);
-	}
+	printf("Reverse lookup: %s\n", ctx.ip_str);
+	printf("Lookup: %s\n", ctx.hostname_str);
 
-	while (*av)
-	{
-		printf("REMAINING %s\n", *av);
-		av++;
-	}
-
-	opt_ctx_delete(&opt_ctx);
+	free(ctx.ip_str);
+	free(ctx.hostname_str);
+	opt_ctx_delete(&ctx.opt_ctx);
 	return (0);
 }

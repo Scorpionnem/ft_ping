@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:47:54 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/21 11:04:06 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/21 13:03:16 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,9 @@ t_opt	opt_new(t_opt_type type)
 	return (f);
 }
 
-int	opt_ctx_add_opt(t_opt_ctx *ctx, char *id, t_opt *opt)
+int	opt_ctx_add_opt(t_opt_ctx *ctx, char *id, t_opt *opt, t_opt_type type)
 {
+	*opt = opt_new(type);
 	ctx->options = realloc(ctx->options, (ctx->options_count + 1) * sizeof(t_opt_pair));
 	if (!ctx->options)
 		return (-1);

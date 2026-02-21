@@ -1,32 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ctx.h                                              :+:      :+:    :+:   */
+/*   dns.h                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/20 12:34:07 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/21 18:06:46 by mbatty           ###   ########.fr       */
+/*   Created: 2026/02/21 17:35:51 by mbatty            #+#    #+#             */
+/*   Updated: 2026/02/21 17:37:00 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "opt.h"
-#include "dns.h"
+#include <string.h>
+#include <stdio.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
-typedef struct	s_ctx
-{
-	t_opt_ctx			opt_ctx;
-
-	t_opt				help;
-	t_opt				verbose;
-	t_opt				test;
-
-	struct sockaddr_in	addr;
-
-	char				*ip_str;
-	char				*hostname_str;
-}	t_ctx;
-
-int	ctx_init(t_ctx *ctx, char ***av);
+char	*dns_reverse_lookup(const char *addr);
+char	*dns_lookup(const char *host, struct sockaddr_in *addr);
