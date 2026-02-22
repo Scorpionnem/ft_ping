@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:34:33 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/22 13:08:08 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/22 13:41:12 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ int	ft_ping(t_ctx *ctx)
 
 	while (g_running)
 	{
-		pckt_init(&pckt, pid, seq++);
+		pckt_init(&pckt, pid, ++seq);
 
 		sendto(ctx->sock_fd, &pckt, sizeof(t_pckt), 0, (struct sockaddr *)&ctx->addr, sizeof(ctx->addr));
 
@@ -70,17 +70,15 @@ int	ft_ping(t_ctx *ctx)
 
 				if (pckt_check(&pckt, pckt_recv, pid) == 0)
 				{
-					printf("Received\n");
+					printf("%d bytes from %s: icmp_seq=%d\n", data_received, ctx->hostname_str, pckt.hdr.un.echo.sequence); // TODO add time
 					break ;
 				}
-				else
-				{
-					printf("Received but wrong packet lol\n");
+				else // TODO fix localhost
 					continue ;
-				}
 			}
 		}
 	}
+	printf("--- %s ping statistics ---\n", ctx->ip_str); // TODO statistics
 	return (0);
 }
 
@@ -91,8 +89,7 @@ int	main(int UNUSED(ac), char **av)
 	if (ctx_init(&ctx, &av) == -1)
 		return (1);
 
-	printf("Reverse lookup: %s\n", ctx.ip_str);
-	printf("Lookup: %s\n", ctx.hostname_str);
+	printf("PING %s (%s) %d(%d) bytes of data.\n", ctx.ip_str, ctx.hostname_str, 67, 69); // TODO fix size
 
 	int	ret = ft_ping(&ctx);
 
