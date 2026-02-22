@@ -12,6 +12,8 @@ SRCS :=	main\
 		opt\
 		dns\
 		ctx\
+		pckt\
+		checksum\
 
 ###
 

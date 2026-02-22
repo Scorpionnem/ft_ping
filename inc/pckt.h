@@ -1,22 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   dns.h                                              :+:      :+:    :+:   */
+/*   pckt.h                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/21 17:35:51 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/22 12:27:16 by mbatty           ###   ########.fr       */
+/*   Created: 2026/02/22 13:01:43 by mbatty            #+#    #+#             */
+/*   Updated: 2026/02/22 13:03:31 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include <string.h>
-#include <stdio.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
+#include <netinet/ip_icmp.h>
 
-char	*dns_reverse_lookup(const char *addr);
-char	*dns_lookup(const char *host, struct sockaddr_in *addr);
+#define ICMP_PAYLOAD_LENGTH (64 - sizeof(struct icmphdr))
+typedef struct	s_pckt
+{
+	struct icmphdr	hdr;
+	char			payload[ICMP_PAYLOAD_LENGTH];
+}	t_pckt;
+
+void	pckt_init(t_pckt *pckt, int pid, int seq);
+int		pckt_check(t_pckt *pckt_sent, t_pckt *pckt_recv, int pid);
+
+unsigned int	checksum(void *b, int len);

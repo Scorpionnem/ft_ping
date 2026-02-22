@@ -1,22 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   dns.h                                              :+:      :+:    :+:   */
+/*   checksum.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/21 17:35:51 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/22 12:27:16 by mbatty           ###   ########.fr       */
+/*   Created: 2026/02/22 13:00:15 by mbatty            #+#    #+#             */
+/*   Updated: 2026/02/22 13:00:23 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+unsigned int	checksum(void *b, int len)
+{
+	unsigned int	*buf = b;
+	unsigned int	sum = 0;
+	unsigned int	result;
 
-#include <string.h>
-#include <stdio.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-
-char	*dns_reverse_lookup(const char *addr);
-char	*dns_lookup(const char *host, struct sockaddr_in *addr);
+	for (sum = 0; len > 1; len -= 2)
+		sum += *buf++;
+	if (len == 1)
+		sum += *(unsigned char *)buf;
+	sum = (sum >> 16) + (sum & 0xFFFF);
+	sum += (sum >> 16);
+	result = ~sum;
+	return (result);
+}
