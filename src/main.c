@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:34:33 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/22 13:41:12 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/22 13:43:17 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,21 +24,14 @@
 #include <netdb.h>
 #include <netinet/in.h>
 
-void	print_help()
-{
-	printf("usage: ./ft_ping [-h, -?]\n\n");
-	printf("options:\n");
-	printf("-? -h --help\tshow help message and exit\n");
-}
-
 static bool	g_running = true;
 
-void	handle_sigint(int UNUSED(sig))
+static void	handle_sigint(int UNUSED(sig))
 {
 	g_running = false;
 }
 
-int	ft_ping(t_ctx *ctx)
+static int	ft_ping(t_ctx *ctx)
 {
 	(void)ctx;
 

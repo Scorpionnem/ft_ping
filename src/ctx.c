@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/21 18:05:50 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/22 12:28:25 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/22 13:43:09 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,13 @@ void	ctx_delete(t_ctx *ctx)
 	free(ctx->ip_str);
 	free(ctx->hostname_str);
 	opt_ctx_delete(&ctx->opt_ctx);
+}
+
+void	print_help()
+{
+	printf("usage: ./ft_ping [-h, -?]\n\n");
+	printf("options:\n");
+	printf("-? -h --help\tshow help message and exit\n");
 }
 
 int	ctx_init_opts(t_ctx *ctx, char ***av)

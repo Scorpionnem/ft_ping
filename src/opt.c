@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:47:54 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/21 13:03:16 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/22 13:42:22 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ int	opt_ctx_delete(t_opt_ctx *ctx)
 	return (0);
 }
 
-static int	has_opt(t_opt_ctx *ctx, char *id)
+static int	find_opt(t_opt_ctx *ctx, char *id)
 {
 	int	i = 0;
 	while (i < ctx->options_count)
@@ -70,7 +70,7 @@ int	opt_ctx_parse(t_opt_ctx *ctx, char ***av)
 	while ((*av)[++i])
 	{
 		char	*arg = (*av)[i];
-		int		find = has_opt(ctx, arg);
+		int		find = find_opt(ctx, arg);
 		if (find != -1)
 		{
 			t_opt	*op = ctx->options[find].opt;
