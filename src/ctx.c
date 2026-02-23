@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/21 18:05:50 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/22 13:43:09 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/23 11:22:20 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,9 +66,16 @@ void	ctx_delete(t_ctx *ctx)
 
 void	print_help()
 {
-	printf("usage: ./ft_ping [-h, -?]\n\n");
-	printf("options:\n");
-	printf("-? -h --help\tshow help message and exit\n");
+	printf("\nUsage:\n  ./ft_ping [-h, -?]\n\n");
+	printf("Options:\n");
+	printf("  <destination>\t\tDNS name or IP adress\n");
+	printf("  -? -h --help\t\tshow help message and exit\n");
+	printf("  -a\t\t\tuse audible ping\n");
+	printf("  -c <count>\t\tstop after <count> replies\n");
+	printf("  -f\t\t\tflood ping\n");
+	printf("  -q\t\t\tquiet output\n");
+	printf("  -t <ttl>\t\tdefine time to leave\n");
+	printf("  -W <timeout>\t\ttime to wait for response\n\n");
 }
 
 int	ctx_init_opts(t_ctx *ctx, char ***av)
@@ -82,7 +89,16 @@ int	ctx_init_opts(t_ctx *ctx, char ***av)
 	opt_ctx_add_opt(&ctx->opt_ctx, "-v", &ctx->verbose, OPT_BOOL);
 	opt_ctx_add_opt(&ctx->opt_ctx, "--verbose", &ctx->verbose, OPT_BOOL);
 
-	opt_ctx_add_opt(&ctx->opt_ctx, "--test", &ctx->test, OPT_STR);
+	opt_ctx_add_opt(&ctx->opt_ctx, "-f", &ctx->flood, OPT_BOOL);
+	opt_ctx_add_opt(&ctx->opt_ctx, "-q", &ctx->quiet, OPT_BOOL);
+	opt_ctx_add_opt(&ctx->opt_ctx, "-a", &ctx->audible, OPT_BOOL);
+
+	opt_ctx_add_opt(&ctx->opt_ctx, "-c", &ctx->count, OPT_INT);
+	ctx->count._int = -1;
+	opt_ctx_add_opt(&ctx->opt_ctx, "-t", &ctx->ttl, OPT_INT);
+	ctx->ttl._int = 64;
+	opt_ctx_add_opt(&ctx->opt_ctx, "-W", &ctx->timeout, OPT_INT);
+	ctx->timeout._int = 1;
 
 	if (opt_ctx_parse(&ctx->opt_ctx, av) == -1)
 	{
