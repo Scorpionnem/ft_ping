@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:34:33 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/23 12:34:41 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/23 13:22:00 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,40 +43,47 @@ static int	send_packet(t_ctx *ctx)
 
 static int	recv_packet(t_ctx *ctx)
 {
-	double	rtt_msec = 0;
-
-	int		data_received = recvfrom(ctx->sock_fd, ctx->buffer, sizeof(ctx->buffer), 0, NULL, NULL);
-	if (data_received == -1)
-		perror("ft_ping: recvfrom");
-
-	clock_gettime(CLOCK_MONOTONIC, &ctx->time_end);
-	double	timeElapsed = ((double)(ctx->time_end.tv_nsec - ctx->time_start.tv_nsec)) / 1000000.0;
-	rtt_msec = (ctx->time_end.tv_sec - ctx->time_start.tv_sec) * 1000.0 + timeElapsed;
-
-	if (data_received >= (int)(sizeof(struct iphdr) + sizeof(struct icmphdr)))
+	while (1)
 	{
-		struct iphdr	*ip = (struct iphdr *)ctx->buffer;
 
-		int				ip_header_length = ip->ihl * 4;
-		int				ttl = ip->ttl;
+		double	rtt_msec = 0;
 
-		t_pckt *pckt_recv = (t_pckt *)(ctx->buffer + ip_header_length);
+		int		data_received = recvfrom(ctx->sock_fd, ctx->buffer, sizeof(ctx->buffer), 0, NULL, NULL);
+		if (data_received == -1)
+			perror("ft_ping: recvfrom");
 
-		if (pckt_check(&ctx->pckt, pckt_recv, ctx->pid) == 0)
+		clock_gettime(CLOCK_MONOTONIC, &ctx->time_end);
+		double	timeElapsed = ((double)(ctx->time_end.tv_nsec - ctx->time_start.tv_nsec)) / 1000000.0;
+		rtt_msec = (ctx->time_end.tv_sec - ctx->time_start.tv_sec) * 1000.0 + timeElapsed;
+
+		if (data_received >= (int)(sizeof(struct iphdr) + sizeof(struct icmphdr)))
 		{
-			ctx->packets_received++;
-			if (!ctx->quiet._bool)
-				printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%f ms\n",
-						data_received - sizeof(struct iphdr), ctx->hostname_str, pckt_recv->hdr.un.echo.sequence, ttl, rtt_msec);
-			if (ctx->audible._bool)
-				printf("\a");
-			if (rtt_msec < ctx->min_time)
-				ctx->min_time = rtt_msec;
-			if (rtt_msec > ctx->max_time)
-				ctx->max_time = rtt_msec;
-			ctx->times = realloc(ctx->times, (ctx->times_count + 1) * sizeof(double));
-			ctx->times[ctx->times_count++] = rtt_msec;
+			struct iphdr	*ip = (struct iphdr *)ctx->buffer;
+
+			int				ip_header_length = ip->ihl * 4;
+			int				ttl = ip->ttl;
+
+			t_pckt *pckt_recv = (t_pckt *)(ctx->buffer + ip_header_length);
+
+			if (pckt_check(&ctx->pckt, pckt_recv, ctx->pid) == 0)
+			{
+				ctx->packets_received++;
+				if (!ctx->quiet._bool)
+					printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%f ms\n",
+							data_received - sizeof(struct iphdr), ctx->hostname_str, pckt_recv->hdr.un.echo.sequence, ttl, rtt_msec);
+				if (ctx->audible._bool)
+					printf("\a");
+				if (rtt_msec < ctx->min_time)
+					ctx->min_time = rtt_msec;
+				if (rtt_msec > ctx->max_time)
+					ctx->max_time = rtt_msec;
+				ctx->times = realloc(ctx->times, (ctx->times_count + 1) * sizeof(double));
+				ctx->times[ctx->times_count++] = rtt_msec;
+			}
+			else if (pckt_recv->hdr.type == ICMP_ECHO) // Special case for localhost
+				continue ;
 		}
+		break ;
 	}
 	return (0);
 }
