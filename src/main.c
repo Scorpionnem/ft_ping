@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:34:33 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/23 11:21:41 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/23 11:35:49 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,13 @@ static int	ft_ping(t_ctx *ctx)
 	double	total_msec = 0;
 	struct timespec	tfs, tfe;
 	clock_gettime(CLOCK_MONOTONIC, &tfs);
+
+	struct timeval	tv_out;
+	tv_out.tv_sec = ctx->timeout._int;
+	tv_out.tv_usec = 0;
+
+	setsockopt(ctx->sock_fd, SOL_IP, IP_TTL, &ctx->ttl._int, sizeof(ctx->ttl._int)); // TODO Check ttl exceeded when recv
+	setsockopt(ctx->sock_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv_out, sizeof tv_out);
 
 	while (g_running)
 	{
