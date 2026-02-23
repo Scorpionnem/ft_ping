@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:34:07 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/23 11:12:40 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/23 12:28:19 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,11 @@ typedef struct	s_ctx
 
 	struct timespec		time_start;
 	struct timespec		time_end;
+
+	double				min_time;
+	double				max_time;
+	double				*times;
+	int					times_count;
 
 	char				buffer[1024];
 

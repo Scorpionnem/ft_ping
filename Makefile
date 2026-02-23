@@ -1,8 +1,8 @@
 NAME :=	ft_ping
 
 CC :=	cc
-CFLAGS :=	-g -MP -MMD -Wall -Wextra -Werror # -fsanitize=address -fno-omit-frame-pointer
-LFLAGS :=
+CFLAGS :=	-g -MP -MMD -Wall -Wextra -Werror -fsanitize=address -fno-omit-frame-pointer
+LFLAGS :=	-lm
 
 ###
 

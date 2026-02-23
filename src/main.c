@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 12:34:33 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/23 11:35:49 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/23 12:34:41 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <math.h>
 
 static bool	g_running = true;
 
@@ -65,13 +66,39 @@ static int	recv_packet(t_ctx *ctx)
 		{
 			ctx->packets_received++;
 			if (!ctx->quiet._bool)
-				printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%f ms\n",
-						data_received, ctx->hostname_str, pckt_recv->hdr.un.echo.sequence, ttl, rtt_msec);
+				printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%f ms\n",
+						data_received - sizeof(struct iphdr), ctx->hostname_str, pckt_recv->hdr.un.echo.sequence, ttl, rtt_msec);
 			if (ctx->audible._bool)
 				printf("\a");
+			if (rtt_msec < ctx->min_time)
+				ctx->min_time = rtt_msec;
+			if (rtt_msec > ctx->max_time)
+				ctx->max_time = rtt_msec;
+			ctx->times = realloc(ctx->times, (ctx->times_count + 1) * sizeof(double));
+			ctx->times[ctx->times_count++] = rtt_msec;
 		}
 	}
 	return (0);
+}
+
+static double	times_avg(t_ctx *ctx)
+{
+	double	accu = 0;
+
+	for (int i = 0; i < ctx->times_count; i++)
+		accu += ctx->times[i];
+	return (ctx->times_count == 0 ? 0 : accu / (double)ctx->times_count);
+}
+
+static double	times_mdev(t_ctx *ctx)
+{
+	double	avg = times_avg(ctx);
+	double	accu = 0;
+
+	for (int i = 0; i < ctx->times_count; i++)
+		accu += pow(ctx->times[i] - avg, 2);
+	accu = ctx->times_count == 0 ? 0 : accu / (double)ctx->times_count;
+	return (sqrt(accu));
 }
 
 static int	ft_ping(t_ctx *ctx)
@@ -113,7 +140,7 @@ static int	ft_ping(t_ctx *ctx)
 
 	printf("--- %s ping statistics ---\n", ctx->ip_str);
 	printf("%d packets transmitted, %d received, %f%% packet loss, time %fms\n", ctx->packets_sent, ctx->packets_received, ratio, total_msec);
-	printf("rtt min/avg/max/mdev = %f/%f/%f/%f ms\n", 67.0f, 67.0f, 67.0f, 67.0f); // TODO statistics
+	printf("rtt min/avg/max/mdev = %f/%f/%f/%f ms\n", ctx->min_time, times_avg(ctx), ctx->max_time, times_mdev(ctx)); // TODO statistics
 	return (0);
 }
 
@@ -124,7 +151,7 @@ int	main(int UNUSED(ac), char **av)
 	if (ctx_init(&ctx, &av) == -1)
 		return (1);
 
-	printf("PING %s (%s) %ld(%ld) bytes of data.\n", ctx.ip_str, ctx.hostname_str, ICMP_PAYLOAD_LENGTH, sizeof(t_pckt)); // TODO fix size
+	printf("PING %s (%s) %ld(%ld) bytes of data.\n", ctx.ip_str, ctx.hostname_str, ICMP_PAYLOAD_LENGTH, sizeof(t_pckt) + sizeof(struct iphdr)); // TODO fix size
 
 	int	ret = ft_ping(&ctx);
 

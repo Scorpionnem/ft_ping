@@ -6,7 +6,7 @@
 /*   By: mbatty <mbatty@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/21 18:05:50 by mbatty            #+#    #+#             */
-/*   Updated: 2026/02/23 11:22:20 by mbatty           ###   ########.fr       */
+/*   Updated: 2026/02/23 12:28:58 by mbatty           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ void	print_help();
 
 int	ctx_init(t_ctx *ctx, char ***av)
 {
+	memset(ctx, 0, sizeof(t_ctx));
 	if (ctx_init_opts(ctx, av) == -1)
 		return (-1);
 	if (ctx->help._bool)
@@ -53,6 +54,8 @@ int	ctx_init(t_ctx *ctx, char ***av)
 		perror("ft_ping: socket");
 		return (-1);
 	}
+
+	ctx->min_time = 69420.0;
 	return (0);
 }
 
@@ -61,6 +64,7 @@ void	ctx_delete(t_ctx *ctx)
 	close(ctx->sock_fd);
 	free(ctx->ip_str);
 	free(ctx->hostname_str);
+	free(ctx->times);
 	opt_ctx_delete(&ctx->opt_ctx);
 }
 
