@@ -55,7 +55,7 @@ int	ctx_init(t_ctx *ctx, char ***av)
 		return (-1);
 	}
 
-	ctx->pid = getpid();
+	ctx->pid = getpid() & 0xFFFF;
 	ctx->min_time = 69420.0;
 	return (0);
 }

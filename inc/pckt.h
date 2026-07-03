@@ -27,4 +27,7 @@ int		pckt_check(t_pckt *pckt_sent, t_pckt *pckt_recv, int pid);
 
 int		pckt_is_error(t_pckt *pckt, int len, int pid);
 
+/* human readable diagnostic for an ICMP error type/code pair */
+const char	*pckt_strerror(int type, int code);
+
 uint16_t	checksum(void *data, int len);

@@ -42,6 +42,44 @@ static int	send_packet(t_ctx *ctx)
 	return (0);
 }
 
+static void	print_ip_header(t_ctx *ctx, struct iphdr *ip)
+{
+	unsigned char	*bytes = (unsigned char *)ip;
+
+	if (ctx->verbose._bool)
+	{
+		printf("IP Hdr Dump:\n ");
+		for (size_t i = 0; i < sizeof(struct iphdr); i++)
+			printf("%02x%s", bytes[i], i % 2 ? " " : "");
+		printf("\n");
+	}
+	printf("Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src\tDst\tData\n");
+	printf(" %1x  %1x  %02x %04x %04x   %1x %04x  %02x  %02x %04x",
+			ip->version, ip->ihl, ip->tos, ntohs(ip->tot_len), ntohs(ip->id),
+			(ntohs(ip->frag_off) & 0xe000) >> 13, ntohs(ip->frag_off) & 0x1fff,
+			ip->ttl, ip->protocol, ntohs(ip->check));
+	printf(" %s ", inet_ntoa(*(struct in_addr *)&ip->saddr));
+	printf(" %s ", inet_ntoa(*(struct in_addr *)&ip->daddr));
+	printf("\n");
+}
+
+static void	print_icmp_error(t_ctx *ctx, struct iphdr *ip, struct icmphdr *icmp, int len)
+{
+	struct iphdr	*orig_ip = (struct iphdr *)((char *)icmp + sizeof(struct icmphdr));
+	struct icmphdr	*orig_icmp = (struct icmphdr *)((char *)orig_ip + orig_ip->ihl * 4);
+
+	if (ctx->quiet._bool && !ctx->verbose._bool)
+		return ;
+	printf("%d bytes from %s: %s\n", len,
+			inet_ntoa(*(struct in_addr *)&ip->saddr), pckt_strerror(icmp->type, icmp->code));
+	print_ip_header(ctx, orig_ip);
+	printf("ICMP: type %u, code %u, size %u", orig_icmp->type, orig_icmp->code,
+			ntohs(orig_ip->tot_len) - orig_ip->ihl * 4);
+	if (orig_icmp->type == ICMP_ECHO || orig_icmp->type == ICMP_ECHOREPLY)
+		printf(", id 0x%04x, seq 0x%04x", ntohs(orig_icmp->un.echo.id), ntohs(orig_icmp->un.echo.sequence));
+	printf("\n");
+}
+
 static int	recv_packet(t_ctx *ctx)
 {
 	while (g_running)
@@ -86,7 +124,7 @@ static int	recv_packet(t_ctx *ctx)
 			return (0);
 		}
 		if (pckt_is_error(pckt_recv, data_received - ip_header_length, ctx->pid))
-			return (dprintf(2, "ft_ping: invalid icmp packet"), -1);
+			return (print_icmp_error(ctx, ip, &pckt_recv->hdr, data_received - ip_header_length), -1);
 	}
 	return (-1);
 }

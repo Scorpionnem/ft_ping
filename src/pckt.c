@@ -58,3 +58,56 @@ int	pckt_is_error(t_pckt *pckt, int len, int pid)
 		return (0);
 	return (1);
 }
+
+const char	*pckt_strerror(int type, int code)
+{
+	switch (type)
+	{
+		case ICMP_DEST_UNREACH:
+		{
+			switch (code)
+			{
+				case ICMP_NET_UNREACH:
+					return ("Destination Net Unreachable");
+				case ICMP_HOST_UNREACH:
+					return ("Destination Host Unreachable");
+				case ICMP_PROT_UNREACH:
+					return ("Destination Protocol Unreachable");
+				case ICMP_PORT_UNREACH:
+					return ("Destination Port Unreachable");
+				case ICMP_FRAG_NEEDED:
+					return ("frag needed and DF set");
+				case ICMP_SR_FAILED:
+					return ("Source Route Failed");
+				case ICMP_NET_UNKNOWN:
+					return ("Network Unknown");
+				case ICMP_HOST_UNKNOWN:
+					return ("Host Unknown");
+				case ICMP_HOST_ISOLATED:
+					return ("Host Isolated");
+				default:
+					return ("Dest Unreachable, Bad Code");
+			}
+		}
+		case ICMP_SOURCE_QUENCH:
+			return ("Source Quench");
+		case ICMP_REDIRECT:
+			return ("Redirect (change route)");
+		case ICMP_TIME_EXCEEDED:
+		{
+			switch (code)
+			{
+				case ICMP_EXC_TTL:
+					return ("Time to live exceeded");
+				case ICMP_EXC_FRAGTIME:
+					return ("Frag reassembly time exceeded");
+				default:
+					return ("Time exceeded, Bad Code");
+			}
+		}
+		case ICMP_PARAMETERPROB:
+			return ("Parameter problem");
+		default:
+			return ("Bad ICMP type");
+	}
+}
