@@ -13,6 +13,7 @@
 #pragma once
 
 #include <netinet/ip_icmp.h>
+#include <stdint.h>
 
 #define ICMP_PAYLOAD_LENGTH (64 - sizeof(struct icmphdr))
 typedef struct	s_pckt
@@ -24,4 +25,6 @@ typedef struct	s_pckt
 void	pckt_init(t_pckt *pckt, int pid, int seq);
 int		pckt_check(t_pckt *pckt_sent, t_pckt *pckt_recv, int pid);
 
-unsigned int	checksum(void *b, int len);
+int		pckt_is_error(t_pckt *pckt, int len, int pid);
+
+uint16_t	checksum(void *data, int len);

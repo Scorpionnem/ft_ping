@@ -21,25 +21,11 @@ char	*dns_lookup(const char *host, struct sockaddr_in *addr)
 	hostent = gethostbyname(host);
 	if (!hostent)
 	{
-		dprintf(2, "ft_ping: %s: Name or service not known\n", host);
+		dprintf(2, "ft_ping: unknown host\n");
 		return (NULL);
 	}
-	(*addr).sin_family = hostent->h_addrtype;
+	(*addr).sin_family = AF_INET;
 	(*addr).sin_port = htons(0);
-	(*addr).sin_addr.s_addr = *(long *)hostent->h_addr;
+	(*addr).sin_addr = *(struct in_addr *)hostent->h_addr;
 	return (strdup(inet_ntoa(*(struct in_addr *)hostent->h_addr)));
-}
-
-char	*dns_reverse_lookup(const char *addr)
-{
-	struct sockaddr_in	temp_addr;
-	char				buf[NI_MAXHOST];
-
-	if (!addr)
-		return (NULL);
-	temp_addr.sin_family = AF_INET;
-	temp_addr.sin_addr.s_addr = inet_addr(addr);
-	if (getnameinfo((struct sockaddr *)&temp_addr, sizeof(struct sockaddr_in), buf, sizeof(buf), NULL, 0, NI_NAMEREQD))
-		return (NULL);
-	return (strdup(buf));
 }

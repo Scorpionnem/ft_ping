@@ -59,6 +59,20 @@ static int	find_opt(t_opt_ctx *ctx, char *id)
 	return (-1);
 }
 
+static bool	str_is_int(char *str)
+{
+	int	i = (str[0] == '-' || str[0] == '+');
+	if (!str[i])
+		return (false);
+	while (str[i])
+	{
+		if (str[i] < '0' || str[i] > '9')
+			return (false);
+		i++;
+	}
+	return (true);
+}
+
 #include <stdio.h>
 
 int	opt_ctx_parse(t_opt_ctx *ctx, char ***av)
@@ -92,7 +106,7 @@ int	opt_ctx_parse(t_opt_ctx *ctx, char ***av)
 				}
 				case OPT_INT:
 				{
-					if (!(*av)[i + 1])
+					if (!(*av)[i + 1] || !str_is_int((*av)[i + 1]))
 						return (dprintf(2, "%s requires an integer argument\n", id), -1);
 					op->_int = atoi((*av)[++i]);
 					break ;
@@ -107,6 +121,12 @@ int	opt_ctx_parse(t_opt_ctx *ctx, char ***av)
 				default:
 					return (dprintf(2, "FATAL: %d invalid opt enum\n", op->type), -1);
 			}
+		}
+		else if (arg[0] == '-' && arg[1])
+		{
+			dprintf(2, "ft_ping: invalid option -- '%s'\n", arg);
+			dprintf(2, "Try 'ft_ping --help' or 'ft_ping --usage' for more information.\n");
+			return (-1);
 		}
 		else
 			(*av)[dump++] = (*av)[i];

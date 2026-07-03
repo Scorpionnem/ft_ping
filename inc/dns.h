@@ -18,5 +18,4 @@
 #include <netdb.h>
 #include <unistd.h>
 
-char	*dns_reverse_lookup(const char *addr);
 char	*dns_lookup(const char *host, struct sockaddr_in *addr);

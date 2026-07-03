@@ -24,6 +24,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <math.h>
+#include <errno.h>
 
 static bool	g_running = true;
 
@@ -43,49 +44,51 @@ static int	send_packet(t_ctx *ctx)
 
 static int	recv_packet(t_ctx *ctx)
 {
-	while (1)
+	while (g_running)
 	{
-
-		double	rtt_msec = 0;
-
-		int		data_received = recvfrom(ctx->sock_fd, ctx->buffer, sizeof(ctx->buffer), 0, NULL, NULL);
+		int	data_received = recvfrom(ctx->sock_fd, ctx->buffer, sizeof(ctx->buffer), 0, NULL, NULL);
 		if (data_received == -1)
-			perror("ft_ping: recvfrom");
+		{
+			if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+				perror("ft_ping: recvfrom");
+			return (-1);
+		}
 
 		clock_gettime(CLOCK_MONOTONIC, &ctx->time_end);
-		double	timeElapsed = ((double)(ctx->time_end.tv_nsec - ctx->time_start.tv_nsec)) / 1000000.0;
-		rtt_msec = (ctx->time_end.tv_sec - ctx->time_start.tv_sec) * 1000.0 + timeElapsed;
+		double	elapsed_time = ((double)(ctx->time_end.tv_nsec - ctx->time_start.tv_nsec)) / 1000000.0;
+		double	rtt_msec = (ctx->time_end.tv_sec - ctx->time_start.tv_sec) * 1000.0 + elapsed_time;
 
-		if (data_received >= (int)(sizeof(struct iphdr) + sizeof(struct icmphdr)))
+		if (data_received < (int)(sizeof(struct iphdr) + sizeof(struct icmphdr)))
+			continue ;
+
+		struct iphdr	*ip = (struct iphdr *)ctx->buffer;
+		int				ip_header_length = ip->ihl * 4;
+
+		t_pckt	*pckt_recv = (t_pckt *)(ctx->buffer + ip_header_length);
+
+		if (pckt_check(&ctx->pckt, pckt_recv, ctx->pid) == 0)
 		{
-			struct iphdr	*ip = (struct iphdr *)ctx->buffer;
-
-			int				ip_header_length = ip->ihl * 4;
-			int				ttl = ip->ttl;
-
-			t_pckt *pckt_recv = (t_pckt *)(ctx->buffer + ip_header_length);
-
-			if (pckt_check(&ctx->pckt, pckt_recv, ctx->pid) == 0)
+			ctx->packets_received++;
+			if (!ctx->quiet._bool && !ctx->flood._bool)
+				printf("%d bytes from %s: icmp_seq=%u ttl=%d time=%.3f ms\n", data_received - ip_header_length, ctx->ip_str, ntohs(pckt_recv->hdr.un.echo.sequence), ip->ttl, rtt_msec);
+			if (ctx->audible._bool)
+				printf("\a");
+			if (rtt_msec < ctx->min_time)
+				ctx->min_time = rtt_msec;
+			if (rtt_msec > ctx->max_time)
+				ctx->max_time = rtt_msec;
+			double	*times = realloc(ctx->times, (ctx->times_count + 1) * sizeof(double));
+			if (times)
 			{
-				ctx->packets_received++;
-				if (!ctx->quiet._bool)
-					printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%f ms\n",
-							data_received - sizeof(struct iphdr), ctx->hostname_str, pckt_recv->hdr.un.echo.sequence, ttl, rtt_msec);
-				if (ctx->audible._bool)
-					printf("\a");
-				if (rtt_msec < ctx->min_time)
-					ctx->min_time = rtt_msec;
-				if (rtt_msec > ctx->max_time)
-					ctx->max_time = rtt_msec;
-				ctx->times = realloc(ctx->times, (ctx->times_count + 1) * sizeof(double));
+				ctx->times = times;
 				ctx->times[ctx->times_count++] = rtt_msec;
 			}
-			else if (pckt_recv->hdr.type == ICMP_ECHO) // Special case for localhost
-				continue ;
+			return (0);
 		}
-		break ;
+		if (pckt_is_error(pckt_recv, data_received - ip_header_length, ctx->pid))
+			return (dprintf(2, "ft_ping: invalid icmp packet"), -1);
 	}
-	return (0);
+	return (-1);
 }
 
 static double	times_avg(t_ctx *ctx)
@@ -112,43 +115,36 @@ static int	ft_ping(t_ctx *ctx)
 {
 	signal(SIGINT, handle_sigint);
 
-	ctx->pid = getpid();
-
-	double	total_msec = 0;
-	struct timespec	tfs, tfe;
-	clock_gettime(CLOCK_MONOTONIC, &tfs);
-
 	struct timeval	tv_out;
 	tv_out.tv_sec = ctx->timeout._int;
 	tv_out.tv_usec = 0;
 
-	setsockopt(ctx->sock_fd, SOL_IP, IP_TTL, &ctx->ttl._int, sizeof(ctx->ttl._int)); // TODO Check ttl exceeded when recv
+	setsockopt(ctx->sock_fd, SOL_IP, IP_TTL, &ctx->ttl._int, sizeof(ctx->ttl._int));
 	setsockopt(ctx->sock_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv_out, sizeof tv_out);
 
 	while (g_running)
 	{
-		pckt_init(&ctx->pckt, ctx->pid, ++ctx->seq);
+		pckt_init(&ctx->pckt, ctx->pid, ctx->seq++);
 
 		send_packet(ctx);
 
 		recv_packet(ctx);
 
-		if (ctx->count._int != -1 && ctx->packets_received >= ctx->count._int)
+		if (ctx->count._int != -1 && ctx->packets_sent >= ctx->count._int)
 			break ;
 
-		if (!ctx->flood._bool)
+		if (!ctx->flood._bool && g_running)
 			sleep(1);
 	}
-	clock_gettime(CLOCK_MONOTONIC, &tfe);
-	double	timeElapsed = ((double)(tfe.tv_nsec - tfs.tv_nsec)) / 1000000.0;
-	total_msec = (tfe.tv_sec - tfs.tv_sec) * 1000.0 + timeElapsed;
 
-	double	ratio = ((ctx->packets_sent - ctx->packets_received) / (double)ctx->packets_sent) * 100.0;
-
-	printf("--- %s ping statistics ---\n", ctx->ip_str);
-	printf("%d packets transmitted, %d received, %f%% packet loss, time %fms\n", ctx->packets_sent, ctx->packets_received, ratio, total_msec);
-	printf("rtt min/avg/max/mdev = %f/%f/%f/%f ms\n", ctx->min_time, times_avg(ctx), ctx->max_time, times_mdev(ctx)); // TODO statistics
-	return (0);
+	printf("--- %s ping statistics ---\n", ctx->hostname_str);
+	printf("%d packets transmitted, %d packets received, ", ctx->packets_sent, ctx->packets_received);
+	if (ctx->packets_sent)
+		printf("%d%% packet loss", ((ctx->packets_sent - ctx->packets_received) * 100) / ctx->packets_sent);
+	printf("\n");
+	if (ctx->packets_received)
+		printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", ctx->min_time, times_avg(ctx), ctx->max_time, times_mdev(ctx));
+	return (ctx->packets_received == 0);
 }
 
 int	main(int UNUSED(ac), char **av)
@@ -158,7 +154,10 @@ int	main(int UNUSED(ac), char **av)
 	if (ctx_init(&ctx, &av) == -1)
 		return (1);
 
-	printf("PING %s (%s) %ld(%ld) bytes of data.\n", ctx.ip_str, ctx.hostname_str, ICMP_PAYLOAD_LENGTH, sizeof(t_pckt) + sizeof(struct iphdr)); // TODO fix size
+	printf("PING %s (%s): %zu data bytes", ctx.hostname_str, ctx.ip_str, ICMP_PAYLOAD_LENGTH);
+	if (ctx.verbose._bool)
+		printf(", id 0x%04x = %u", ctx.pid, ctx.pid);
+	printf("\n");
 
 	int	ret = ft_ping(&ctx);
 

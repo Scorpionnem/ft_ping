@@ -12,6 +12,7 @@
 
 #include "ctx.h"
 #include <stdlib.h>
+#include <errno.h>
 
 int		ctx_init_opts(t_ctx *ctx, char ***av);
 void	print_help();
@@ -25,24 +26,23 @@ int	ctx_init(t_ctx *ctx, char ***av)
 	{
 		opt_ctx_delete(&ctx->opt_ctx);
 		print_help();
-		return (-1);
+		exit(0);
 	}
 
 	if (!*av[0])
 	{
 		opt_ctx_delete(&ctx->opt_ctx);
-		dprintf(2, "ft_ping: usage error: Destination address required\n");
+		dprintf(2, "ft_ping: missing host operand\n");
+		dprintf(2, "Try 'ft_ping --help' or 'ft_ping --usage' for more information.\n");
 		return (-1);
 	}
 
-	ctx->ip_str = dns_reverse_lookup(*av[0]);
+	ctx->hostname_str = strdup(*av[0]);
+	ctx->ip_str = dns_lookup(ctx->hostname_str, &ctx->addr);
 	if (!ctx->ip_str)
-		ctx->ip_str = strdup(*av[0]);
-	ctx->hostname_str = dns_lookup(ctx->ip_str, &ctx->addr);
-	if (!ctx->hostname_str)
 	{
 		opt_ctx_delete(&ctx->opt_ctx);
-		free(ctx->ip_str);
+		free(ctx->hostname_str);
 		return (-1);
 	}
 	ctx->sock_fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
@@ -55,6 +55,7 @@ int	ctx_init(t_ctx *ctx, char ***av)
 		return (-1);
 	}
 
+	ctx->pid = getpid();
 	ctx->min_time = 69420.0;
 	return (0);
 }
@@ -70,15 +71,16 @@ void	ctx_delete(t_ctx *ctx)
 
 void	print_help()
 {
-	printf("\nUsage:\n  ./ft_ping [-h, -?]\n\n");
+	printf("\nUsage:\n  ./ft_ping [options] <destination>\n\n");
 	printf("Options:\n");
 	printf("  <destination>\t\tDNS name or IP adress\n");
 	printf("  -? -h --help\t\tshow help message and exit\n");
+	printf("  -v --verbose\t\tverbose output\n");
 	printf("  -a\t\t\tuse audible ping\n");
-	printf("  -c <count>\t\tstop after <count> replies\n");
+	printf("  -c <count>\t\tstop after <count> packets\n");
 	printf("  -f\t\t\tflood ping\n");
 	printf("  -q\t\t\tquiet output\n");
-	printf("  -t <ttl>\t\tdefine time to leave\n");
+	printf("  -t <ttl>\t\tdefine time to live\n");
 	printf("  -W <timeout>\t\ttime to wait for response\n\n");
 }
 
@@ -109,6 +111,12 @@ int	ctx_init_opts(t_ctx *ctx, char ***av)
 		opt_ctx_delete(&ctx->opt_ctx);
 		return (-1);
 	}
+	if (ctx->ttl._int < 1 || ctx->ttl._int > 255)
+		return (dprintf(2, "ft_ping: ttl %d out of range\n", ctx->ttl._int), opt_ctx_delete(&ctx->opt_ctx), -1);
+	if (ctx->count._int != -1 && ctx->count._int < 1)
+		return (dprintf(2, "ft_ping: invalid count: %d\n", ctx->count._int), opt_ctx_delete(&ctx->opt_ctx), -1);
+	if (ctx->timeout._int < 1)
+		return (dprintf(2, "ft_ping: invalid timeout: %d\n", ctx->timeout._int), opt_ctx_delete(&ctx->opt_ctx), -1);
 	return (0);
 }
 

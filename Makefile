@@ -1,7 +1,7 @@
 NAME :=	ft_ping
 
 CC :=	cc
-CFLAGS :=	-g -MP -MMD -Wall -Wextra -Werror -fsanitize=address -fno-omit-frame-pointer
+CFLAGS :=	-g -MP -MMD -Wall -Wextra -Werror
 LFLAGS :=	-lm
 
 ###
@@ -38,7 +38,7 @@ all: $(NAME)
 
 $(NAME): $(OBJS)
 	@echo Compiling $(NAME)
-	@$(CC) $(CFLAGS) $(LFLAGS) $(INCLUDE_DIRS) -o $@ $^
+	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) -o $@ $^ $(LFLAGS)
 
 $(OBJ_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
